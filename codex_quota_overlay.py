@@ -22,6 +22,10 @@ APP_NAME = "Codex Quota Overlay"
 VERSION = "0.1.0"
 DEFAULT_INTERVAL = 30
 MIN_INTERVAL = 10
+INITIAL_REFRESH_DELAY_MS = 1_000
+INITIAL_RETRY_DELAY_MS = 1_000
+MAX_INITIAL_REFRESH_ATTEMPTS = 3
+WEEKLY_WINDOW_MINUTES = 7 * 24 * 60
 DEFAULT_TOPMOST = True
 DEFAULT_OPACITY = 96
 MIN_OPACITY = 30
@@ -132,6 +136,10 @@ def extract_rows(payload: dict[str, Any]) -> list[QuotaRow]:
                 )
             )
     return rows
+
+
+def has_weekly_window(rows: list[QuotaRow]) -> bool:
+    return any((row.window_minutes or 0) >= WEEKLY_WINDOW_MINUTES for row in rows)
 
 
 def plan_name(account: dict[str, Any], limits: dict[str, Any]) -> str:
@@ -309,6 +317,7 @@ class Overlay:
         self.rows: list[QuotaRow] = []
         self.reset_labels: list[tk.Label] = []
         self.row_widgets: list[tuple[tk.Label, tk.Label, tk.Canvas, int, int, tk.Label]] = []
+        self.initial_refresh_attempts = 0
         self.refresh_job: str | None = None
         self.settings_window: tk.Toplevel | None = None
         self.moved = False
@@ -333,7 +342,7 @@ class Overlay:
         if demo:
             self._show_demo()
         else:
-            self.root.after(100, self.refresh)
+            self.root.after(INITIAL_REFRESH_DELAY_MS, self._initial_refresh)
 
     def _build(self) -> None:
         outer = tk.Frame(self.root, bg=BG, padx=14, pady=12)
@@ -395,6 +404,22 @@ class Overlay:
             return
         self.status_label.configure(text="Refreshing…", fg=MUTED)
         self.service.refresh()
+
+    def _initial_refresh(self) -> None:
+        self.initial_refresh_attempts += 1
+        self.refresh()
+
+    def _check_initial_refresh(self, rows: list[QuotaRow] | None = None) -> None:
+        if not self.initial_refresh_attempts:
+            return
+        if rows is not None and has_weekly_window(rows):
+            self.initial_refresh_attempts = 0
+            return
+        if self.initial_refresh_attempts >= MAX_INITIAL_REFRESH_ATTEMPTS:
+            self.initial_refresh_attempts = 0
+            return
+        self.status_label.configure(text="Waiting for complete quota data…", fg=MUTED)
+        self.root.after(INITIAL_RETRY_DELAY_MS, self._initial_refresh)
 
     def open_settings(self) -> None:
         if self.settings_window is not None and self.settings_window.winfo_exists():
@@ -545,8 +570,10 @@ class Overlay:
             if kind == "data":
                 plan, rows = payload
                 self._render(plan, rows)
+                self._check_initial_refresh(rows)
             elif kind == "error":
                 self.status_label.configure(text=f"Read failed: {payload}", fg=RED)
+                self._check_initial_refresh()
         self.root.after(250, self._drain_events)
 
     def _render(self, plan: str, rows: list[QuotaRow]) -> None:
@@ -629,6 +656,7 @@ def self_check() -> None:
     )
     assert [row.label for row in rows] == ["5 hours", "7 days"]
     assert rows[0].used_percent == 25
+    assert has_weekly_window(rows)
     print("self-check: ok")
 
 

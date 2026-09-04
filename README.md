@@ -24,6 +24,9 @@ chmod +x start_quota_overlay.sh
 This script starts only the overlay. Start ChatGPT/Codex separately using its
 normal application-menu entry.
 
+On startup, if the 7-day window is not ready yet, the overlay waits briefly
+and retries automatically up to three times.
+
 ## What `install.sh` does
 
 The installer is optional. It adds a `Codex Quota Overlay` entry to the current
