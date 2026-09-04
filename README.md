@@ -14,18 +14,21 @@ Requirements:
 - ChatGPT/Codex installed and signed in
 - `python3-tk` installed (`sudo apt install python3-tk`)
 
-Start ChatGPT/Codex and the quota overlay together:
+Start the quota overlay manually:
 
 ```bash
-chmod +x start_codex_with_quota.sh
-./start_codex_with_quota.sh
+chmod +x start_quota_overlay.sh
+./start_quota_overlay.sh
 ```
 
-Use this shell launcher instead of the original ChatGPT/Codex menu entry. It
-starts the overlay in the background and then launches the desktop app.
+This script starts only the overlay. Start ChatGPT/Codex separately using its
+normal application-menu entry.
 
-To add a `ChatGPT/Codex with Quota` entry to the current user's application
-menu, run:
+## What `install.sh` does
+
+The installer is optional. It adds a `Codex Quota Overlay` entry to the current
+user's application menu; it does not install system packages, start ChatGPT or
+Codex, or enable login autostart. Run:
 
 ```bash
 ./install.sh
@@ -36,9 +39,6 @@ Remove that menu entry with:
 ```bash
 ./install.sh --uninstall
 ```
-
-This installer does not enable login autostart; the combined shell launcher is
-the intended way to start both programs.
 
 ## Settings
 

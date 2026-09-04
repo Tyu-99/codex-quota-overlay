@@ -13,7 +13,7 @@ desktop_file="$applications_dir/codex-quota-overlay.desktop"
 
 if [ "${1:-}" = "--uninstall" ]; then
   rm -f "$desktop_file"
-  echo "Removed the Codex Quota Overlay launcher"
+  echo "Removed the Codex Quota Overlay application-menu entry"
   exit 0
 fi
 
@@ -24,13 +24,13 @@ mkdir -p "$applications_dir"
 {
   printf '%s\n' '[Desktop Entry]'
   printf '%s\n' 'Type=Application'
-  printf '%s\n' 'Name=ChatGPT/Codex with Quota'
-  printf '%s\n' 'Comment=Launch ChatGPT/Codex with the quota overlay'
-  printf 'Exec=%s %%U\n' "$app_dir/start_codex_with_quota.sh"
-  printf 'TryExec=%s\n' "$app_dir/start_codex_with_quota.sh"
+  printf '%s\n' 'Name=Codex Quota Overlay'
+  printf '%s\n' 'Comment=Show ChatGPT/Codex plan quota'
+  printf 'Exec=%s\n' "$app_dir/start_quota_overlay.sh"
+  printf 'TryExec=%s\n' "$app_dir/start_quota_overlay.sh"
   printf '%s\n' 'Terminal=false'
   printf '%s\n' 'Categories=Utility;Development;'
 } > "$desktop_file"
 
-echo "Installed the ChatGPT/Codex with Quota launcher"
-echo "Use the new application menu entry or run: $app_dir/start_codex_with_quota.sh"
+echo "Installed the Codex Quota Overlay application-menu entry"
+echo "Use the new application-menu entry or run: $app_dir/start_quota_overlay.sh"
