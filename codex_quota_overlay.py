@@ -615,6 +615,7 @@ class Overlay:
 
             self.root.update_idletasks()
             self._place(max(170, 112 + len(rows) * 67))
+            self.root.after_idle(self._sync_bar_geometry)
 
         for row, (title, remaining_label, bar, track_id, used_id, _reset) in zip(rows, self.row_widgets):
             remaining = 100.0 - row.used_percent
@@ -625,6 +626,12 @@ class Overlay:
             bar.coords(track_id, 0, 0, width, 7)
             bar.coords(used_id, 0, 0, width * row.used_percent / 100, 7)
             bar.itemconfigure(used_id, fill=color)
+
+    def _sync_bar_geometry(self) -> None:
+        for row, (_title, _remaining_label, bar, track_id, used_id, _reset) in zip(self.rows, self.row_widgets):
+            width = max(1, bar.winfo_width())
+            bar.coords(track_id, 0, 0, width, 7)
+            bar.coords(used_id, 0, 0, width * row.used_percent / 100, 7)
 
     def _update_countdowns(self) -> None:
         for label, row in zip(self.reset_labels, self.rows):
